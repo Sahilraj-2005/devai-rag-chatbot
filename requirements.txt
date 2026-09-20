@@ -1,0 +1,9 @@
+streamlit
+openai
+python-dotenv
+faiss-cpu
+sentence-transformers
+numpy
+pymupdf
+rank-bm25
+torchvision
