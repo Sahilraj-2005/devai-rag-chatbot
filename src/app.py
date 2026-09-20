@@ -1,4 +1,5 @@
 import time
+import os
 import streamlit as st
 from rag import answer_question
 
@@ -24,7 +25,8 @@ with st.sidebar:
         "What was MetaGPT's exact Task Solve Rate?",
         "Which framework was the most expensive per task?",
         "What is the DevAI dataset and how many tasks does it contain?",
-        "Which search algorithm configuration gave the highest alignment rate?"
+        "Which search algorithm configuration gave the highest alignment rate?",
+        "In the diagram comparing LLM-as-a-Judge, Agent-as-a-Judge, and Human-as-a-Judge, what key drawback is highlighted for Human-as-a-Judge?"
     ]
     
     selected_sample = st.selectbox("Choose a preset question:", sample_questions)
@@ -35,7 +37,7 @@ with st.sidebar:
 
 # Main Title & Subtitle
 st.title("🤖 DevAI Agent-as-a-Judge RAG Chatbot")
-st.caption("Hybrid RAG pipeline combining FAISS vector search, BM25 keyword matching, and LLM reasoning.")
+st.caption("Hybrid RAG pipeline combining FAISS vector search, BM25 keyword matching, Multimodal AI Vision, and LLM reasoning.")
 
 # Set input field value based on sample selection
 default_query = "" if selected_sample == "Select a sample question..." else selected_sample
@@ -53,9 +55,8 @@ with col_ask:
 if submit_button and question.strip():
     start_time = time.time()
     
-    with st.spinner("Retrieving evidence chunks and generating answer..."):
+    with st.spinner("Retrieving multimodal evidence chunks and generating answer..."):
         try:
-            # Try passing top_k if answer_question supports it; fallback to single arg
             try:
                 result = answer_question(question, top_k=top_k)
             except TypeError:
@@ -83,15 +84,21 @@ if submit_button and question.strip():
             st.info("No evidence chunks were retrieved for this query.")
         else:
             for idx, source in enumerate(sources, 1):
-                # Fallback key resolution
                 page = source.get("page", source.get("metadata", {}).get("page", "N/A"))
                 chunk_id = source.get("chunk_id", source.get("id", idx))
                 score = source.get("score", 0.0)
                 text_content = source.get("text", source.get("content", source.get("page_content", "")))
+                
+                # Check for associated image path from our AI Vision ingestion
+                image_path = source.get("image_path", "")
 
                 title = f"Chunk #{idx} | Page: {page} | ID: {chunk_id} | Score: {score:.4f}"
                 
                 with st.expander(title):
+                    # If an image exists for this page, display it inside the expander
+                    if image_path and os.path.exists(image_path):
+                        st.image(image_path, caption=f"Source Figure - Page {page}", use_container_width=True)
+                    
                     st.text_area(
                         label=f"text_{idx}",
                         value=text_content,

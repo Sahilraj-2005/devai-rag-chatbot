@@ -6,8 +6,9 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from rank_bm25 import BM25Okapi
 
-# Resolves to devai-rag-chatbot root folder
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Resolves base directory flexibly whether run from src/ or root
+CURRENT_DIR = Path(__file__).resolve().parent
+BASE_DIR = CURRENT_DIR if (CURRENT_DIR / "artifacts").exists() else CURRENT_DIR.parent
 
 CHUNKS_PATH = BASE_DIR / "artifacts" / "chunks.json"
 INDEX_PATH = BASE_DIR / "artifacts" / "index.faiss"
@@ -37,7 +38,7 @@ class Retriever:
         ]
         self.bm25 = BM25Okapi(corpus)
 
-    def search(self, query: str, top_k: int = 5, candidate_k: int = 20):
+    def search(self, query: str, top_k: int = 5, candidate_k: int = 25):
         """
         Executes a hybrid search combining FAISS dense vector search 
         and BM25 sparse keyword search using Reciprocal Rank Fusion (RRF).
